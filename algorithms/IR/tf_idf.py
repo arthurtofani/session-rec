@@ -212,7 +212,7 @@ class TfIdf:
         #scores.update(weighted_items)
         scores.update(items_scores)
 
-        #import code; code.interact(local=dict(globals(), **locals()))
+        import code; code.interact(local=dict(globals(), **locals()))
 
         predictions = np.zeros(len(predict_for_item_ids))
         mask = np.in1d(predict_for_item_ids, list(scores.keys()))
