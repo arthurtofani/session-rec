@@ -1,0 +1,61 @@
+type: single # single|window, maybe add opt
+key: baselines_and_models_and_hybrids #added to the csv names
+#evaluation: evaluation #evaluation|evaluation_last|evaluation_multiple|evaluation_user_based|evaluation_user_based_multiple
+evaluation: evaluation_online
+
+data:
+  name: 30music #added in the end of the csv names
+  folder: data/30music/slices/
+  prefix: 30music
+  slice_num: 1 #only window
+  opts: {sessions_test: 100}
+params:
+output:
+  folder: results/next/30music/
+
+results:
+  folder: results/next/30music/
+
+metrics:
+- class: accuracy.HitRate
+  length: [3,5,10,15,20]
+- class: accuracy.MRR
+  length: [3,5,10,15,20]
+- class: accuracy_multiple.NDCG
+  length: [3,5,10,15,20]
+- class: coverage.Coverage
+  length: [20]
+- class: popularity.Popularity
+  length: [20]
+- class: saver.Saver
+  length: [50]
+- class: time_memory_usage.Time_usage_training
+- class: time_memory_usage.Time_usage_testing
+#- class: time_memory_usage.Memory_usage
+
+algorithms:
+- class: IR.tf_idf.TfIdf
+  params: { k: 100, sample_size: 500, similarity: cosine, extend: False }
+  key: tf_idf
+- class: IR.sknn.Sknn
+  params: { k: 100, sample_size: 500, similarity: cosine, extend: False }
+  key: ir_sknn
+#- class: knn.sknn.ContextKNN
+#  params: { k: 100, sample_size: 500, similarity: cosine, extend: False }
+#  key: sknn
+
+#- class: knn.stan.STAN
+#  params:
+#    k: 1000
+#    sample_size: 10000
+#    #stan
+#    lambda_spw: 0.00001
+#    lambda_snh: 100
+#    lambda_inh: 4.2
+
+#- class: knn.iknn.ItemKNN
+#  params: {  }
+#  key: iknn
+#- class: knn.vsknn.VMContextKNN
+#  params: { k: 500, sample_size: 5000, weighting: quadratic , weighting_score: div, idf_weighting: 5, extend: True  }
+#  key: vsknn

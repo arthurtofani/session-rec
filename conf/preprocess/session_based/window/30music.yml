@@ -3,9 +3,10 @@ mode: session_based # session_based | session_aware
 preprocessor: music #
 data:
   folder: data/30music/raw/
-  prefix: 30music-200ks
+  prefix: 30music
+  slice_num: 0
 
-filter: 
+filter:
   min_item_support: 2
   min_session_length: 5
 

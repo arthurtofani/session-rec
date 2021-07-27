@@ -1,24 +1,25 @@
 import numpy as np
-    
-class Precision: 
+
+
+class Precision:
     '''
     Precision( length=20 )
 
-    Used to iteratively calculate the average hit rate for a result list with the defined length. 
+    Used to iterativ/ely calculate the average hit rate for a result list with the defined length.
 
     Parameters
     -----------
     length : int
         HitRate@length
     '''
-    
+
     def __init__(self, length=20):
         self.length = length;
-    
+
     def init(self, train):
         '''
         Do initialization work here.
-        
+
         Parameters
         --------
         train: pandas.DataFrame
@@ -26,19 +27,19 @@ class Precision:
             It must have a header. Column names are arbitrary, but must correspond to the ones you set during the initialization of the network (session_key, item_key, time_key properties).
         '''
         return
-        
+
     def reset(self):
         '''
         Reset for usage in multiple evaluations
         '''
         self.test=0;
         self.hit=0
-    
+
     def add(self, result, next_item, for_item=0, session=0, pop_bin=None, position=None):
         '''
         Update the metric with a result set and the correct next item.
         Result must be sorted correctly.
-        
+
         Parameters
         --------
         result: pandas.Series
@@ -46,12 +47,12 @@ class Precision:
         '''
         self.test += self.length
         self.hit += len( set(next_item) & set(result[:self.length].index) )
-    
+
     def add_multiple(self, result, next_items, for_item=0, session=0,position=None):
         '''
         Update the metric with a result set and the correct next item.
         Result must be sorted correctly.
-        
+
         Parameters
         --------
         result: pandas.Series
@@ -59,11 +60,11 @@ class Precision:
         '''
         self.test += 1
         self.hit += len( set(next_items) & set(result[:self.length].index) ) / self.length
-        
+
     def add_batch(self, result, next_item):
         '''
         Update the metric with a result set and the correct next item.
-        
+
         Parameters
         --------
         result: pandas.DataFrame
@@ -72,36 +73,36 @@ class Precision:
         next_item: Array of correct next items
         '''
         i=0
-        for part, series in result.iteritems(): 
+        for part, series in result.iteritems():
             result.sort_values( part, ascending=False, inplace=True )
             self.add( series, next_item[i] )
             i += 1
-        
+
     def result(self):
         '''
         Return a tuple of a description string and the current averaged value
         '''
         return ("Precision@" + str(self.length) + ": "), (self.hit/self.test)
-    
-class Recall: 
+
+class Recall:
     '''
     Precision( length=20 )
 
-    Used to iteratively calculate the average hit rate for a result list with the defined length. 
+    Used to iteratively calculate the average hit rate for a result list with the defined length.
 
     Parameters
     -----------
     length : int
         HitRate@length
     '''
-    
+
     def __init__(self, length=20):
         self.length = length;
-    
+
     def init(self, train):
         '''
         Do initialization work here.
-        
+
         Parameters
         --------
         train: pandas.DataFrame
@@ -109,19 +110,19 @@ class Recall:
             It must have a header. Column names are arbitrary, but must correspond to the ones you set during the initialization of the network (session_key, item_key, time_key properties).
         '''
         return
-        
+
     def reset(self):
         '''
         Reset for usage in multiple evaluations
         '''
         self.test=0;
         self.hit=0
-    
+
     def add(self, result, next_item, for_item=0, session=0, pop_bin=None, position=None):
         '''
         Update the metric with a result set and the correct next item.
         Result must be sorted correctly.
-        
+
         Parameters
         --------
         result: pandas.Series
@@ -132,12 +133,12 @@ class Recall:
         b=set(result[:self.length].index)
         c=set(next_item) & set(result[:self.length].index)
         self.hit += len( set(next_item) & set(result[:self.length].index) )
-       
+
     def add_multiple(self, result, next_items, for_item=0, session=0,position=None):
         '''
         Update the metric with a result set and the correct next item.
         Result must be sorted correctly.
-        
+
         Parameters
         --------
         result: pandas.Series
@@ -145,11 +146,11 @@ class Recall:
         '''
         self.test += 1
         self.hit += len( set(next_items) & set(result[:self.length].index) ) / len(next_items)
-        
+
     def add_batch(self, result, next_item):
         '''
         Update the metric with a result set and the correct next item.
-        
+
         Parameters
         --------
         result: pandas.DataFrame
@@ -158,22 +159,22 @@ class Recall:
         next_item: Array of correct next items
         '''
         i=0
-        for part, series in result.iteritems(): 
+        for part, series in result.iteritems():
             result.sort_values( part, ascending=False, inplace=True )
             self.add( series, next_item[i] )
             i += 1
-        
+
     def result(self):
         '''
         Return a tuple of a description string and the current averaged value
         '''
         return ("Recall@" + str(self.length) + ": "), (self.hit/self.test)
 
-class MAP: 
+class MAP:
     '''
     MAP( length=20 )
 
-    Used to iteratively calculate the mean average precision for a result list with the defined length. 
+    Used to iteratively calculate the mean average precision for a result list with the defined length.
 
     Parameters
     -----------
@@ -182,11 +183,11 @@ class MAP:
     '''
     def __init__(self, length=20):
         self.length = length;
-    
+
     def init(self, train):
         '''
         Do initialization work here.
-        
+
         Parameters
         --------
         train: pandas.DataFrame
@@ -194,108 +195,108 @@ class MAP:
             It must have a header. Column names are arbitrary, but must correspond to the ones you set during the initialization of the network (session_key, item_key, time_key properties).
         '''
         return
-        
+
     def reset(self):
         '''
         Reset for usage in multiple evaluations
         '''
         self.test=0;
         self.pos=0
-    
+
     def skip(self, for_item = 0, session = -1 ):
         pass
-        
+
     def add_multiple(self, result, next_items, for_item=0, session=0,position=None ):
         '''
         Update the metric with a result set and the correct next item.
         Result must be sorted correctly.
-        
+
         Parameters
         --------
         result: pandas.Series
             Series of scores with the item id as the index
         '''
-        
+
         last_recall = 0
-        
+
         res = 0
-        
+
         for i in range(self.length):
             recall = self.recall(result[:i].index, next_items)
             precision = self.precision(result[:i].index, next_items)
             res += precision * (recall - last_recall)
             last_recall = recall
-        
+
         self.pos += res
         self.test += 1
-        
+
     def add(self, result, next_item, for_item=0, session=0, pop_bin=None, position=None ):
         '''
         Update the metric with a result set and the correct next item.
         Result must be sorted correctly.
-        
+
         Parameters
         --------
         result: pandas.Series
             Series of scores with the item id as the index
         '''
-        
+
         sum = 0
-        
+
         for i in range(self.length):
             sum += self.mrr(result, next_item, i+1)
-        
+
         self.pos += ( sum / self.length )
         self.test += 1
-    
+
     def recall( self, result, next_items ):
         '''
         Update the metric with a result set and the correct next item.
         Result must be sorted correctly.
-        
+
         Parameters
         --------
         result: pandas.Series
             Series of scores with the item id as the index
         '''
-        
+
         return len( set(next_items) & set(result) ) / len( next_items )
-    
+
     def precision( self, result, next_items ):
         '''
         Update the metric with a result set and the correct next item.
         Result must be sorted correctly.
-        
+
         Parameters
         --------
         result: pandas.Series
             Series of scores with the item id as the index
         '''
-        
+
         return len( set(next_items) & set(result) ) / self.length
-    
+
     def mrr( self, result, next_item, n ):
         '''
         Update the metric with a result set and the correct next item.
         Result must be sorted correctly.
-        
+
         Parameters
         --------
         result: pandas.Series
             Series of scores with the item id as the index
         '''
         res = result[:n]
-        
+
         if next_item in res.index:
             rank = res.index.get_loc( next_item )+1
             return 1.0/rank
         else:
             return 0
-        
-    def add_batch(self, result, next_item): 
+
+    def add_batch(self, result, next_item):
         '''
         Update the metric with a result set and the correct next item.
-        
+
         Parameters
         --------
         result: pandas.DataFrame
@@ -304,11 +305,11 @@ class MAP:
         next_item: Array of correct next items
         '''
         i=0
-        for part, series in result.iteritems(): 
+        for part, series in result.iteritems():
             result.sort_values( part, ascending=False, inplace=True )
             self.add( series, next_item[i] )
             i += 1
-        
+
     def result(self):
         '''
         Return a tuple of a description string and the current averaged value
