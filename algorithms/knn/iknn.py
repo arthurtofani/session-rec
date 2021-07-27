@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-
+from tqdm import tqdm
 
 class ItemKNN:
     '''
@@ -38,7 +38,7 @@ class ItemKNN:
         self.session_key = session_key
         self.time_key = time_key
 
-    def fit(self, data):
+    def fit(self, data, items=None):
         '''
         Trains the predictor.
 
@@ -50,6 +50,7 @@ class ItemKNN:
 
         '''
         data.set_index(np.arange(len(data)), inplace=True)
+
         itemids = data[self.item_key].unique()
         n_items = len(itemids)
         data = pd.merge(data, pd.DataFrame({self.item_key: itemids, 'ItemIdx': np.arange(len(itemids))}),
@@ -66,7 +67,7 @@ class ItemKNN:
         item_offsets[1:] = supp.cumsum()
         index_by_items = data.sort_values(['ItemIdx', self.time_key]).index.values
         self.sims = dict()
-        for i in range(n_items):
+        for i in tqdm(range(n_items), total=n_items):
             iarray = np.zeros(n_items)
             start = item_offsets[i]
             end = item_offsets[i + 1]
@@ -76,6 +77,7 @@ class ItemKNN:
                 uend = session_offsets[uidx + 1]
                 user_events = index_by_sessions[ustart:uend]
                 iarray[data.ItemIdx.values[user_events]] += 1
+            #import code; code.interact(local=dict(globals(), **locals()))
             iarray[i] = 0
             norm = np.power((supp[i] + self.lmbd), self.alpha) * np.power((supp.values + self.lmbd), (1.0 - self.alpha))
             norm[norm == 0] = 1

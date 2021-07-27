@@ -257,6 +257,7 @@ def load_data_session(path, file, sessions_train=None, sessions_test=None, slice
         train_appendix = '_train_tr'
         test_appendix = '_train_valid'
 
+
     train = pd.read_csv(path + file + train_appendix + split + '.txt', sep='\t', dtype={'ItemId': np.int64})
     test = pd.read_csv(path + file + test_appendix + split + '.txt', sep='\t', dtype={'ItemId': np.int64})
 

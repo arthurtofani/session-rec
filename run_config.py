@@ -8,31 +8,31 @@ import traceback
 import socket
 import numpy as np
 import pandas as pd
-from skopt import Optimizer
-
+#from skopt import Optimizer
+from tqdm import tqdm
 import yaml
 
 import evaluation.loader as dl
 from builtins import Exception
 import pickle
 import dill
-from telegram.ext.updater import Updater
-from telegram.ext.commandhandler import CommandHandler
-import telegram
+#from telegram.ext.updater import Updater
+#from telegram.ext.commandhandler import CommandHandler
+#import telegram
 import random
 import gc
 
 # telegram notificaitons
-CHAT_ID = -1
-BOT_TOKEN = 'API_TOKEN'
+#CHAT_ID = -1
+#BOT_TOKEN = 'API_TOKEN'
 
 NOTIFY = False
-TELEGRAM_STATUS = False
-if TELEGRAM_STATUS:
-    updater = Updater(BOT_TOKEN)  # , use_context=True
-    updater.start_polling()
-if NOTIFY:
-    bot = telegram.Bot(token=BOT_TOKEN)
+# TELEGRAM_STATUS = False
+# if TELEGRAM_STATUS:
+#     updater = Updater(BOT_TOKEN)  # , use_context=True
+#     updater.start_polling()
+# if NOTIFY:
+#     bot = telegram.Bot(token=BOT_TOKEN)
 
 
 def main(conf, out=None):
@@ -45,8 +45,8 @@ def main(conf, out=None):
             Output folder path for endless run listening for new configurations.
     '''
     print('Checking {}'.format(conf))
-    if TELEGRAM_STATUS:
-        updater.dispatcher.add_handler( CommandHandler('status', status) )
+    #if TELEGRAM_STATUS:
+    #    updater.dispatcher.add_handler( CommandHandler('status', status) )
 
     file = Path(conf)
     if file.is_file():
@@ -172,7 +172,7 @@ def run_file(conf):
         print(conf['type'] + ' not supported')
 
 
-def run_single(conf, slice=None):
+def run_single(conf, slice=0):
     '''
     Evaluate the algorithms for a single split
         --------
@@ -188,6 +188,8 @@ def run_single(conf, slice=None):
     evaluation = load_evaluation(conf['evaluation'])
 
     buys = pd.DataFrame()
+    if 'slice_num' in conf['data']:
+        slice = conf['data']['slice_num']
 
     if 'type' in conf['data']:
         if conf['data']['type'] == 'hdf':  # hdf5 file
@@ -200,8 +202,8 @@ def run_single(conf, slice=None):
         # elif conf['data']['type'] == 'csv': # csv file
     else:  # csv file (default)
         if 'opts' in conf['data']:
-            train, test = dl.load_data_session(conf['data']['folder'], conf['data']['prefix'], slice_num=slice,
-                                               **conf['data']['opts'])
+            train, test = dl.load_data_session(conf['data']['folder'], conf['data']['prefix'], slice_num=slice, **conf['data']['opts'])
+
         else:
             train, test = dl.load_data_session(conf['data']['folder'], conf['data']['prefix'], slice_num=slice)
         if 'buys' in conf['data'] and 'file_buys' in conf['data']:
@@ -217,7 +219,10 @@ def run_single(conf, slice=None):
     results = {}
 
     for k, a in algorithms.items():
-        eval_algorithm(train, test, k, a, evaluation, metrics, results, conf, slice=slice, iteration=slice)
+        if conf['evaluation'] == 'evaluation_online':
+            eval_algorithm_incremental(train, test, k, a, evaluation, metrics, results, conf, slice=slice, iteration=slice)
+        else:
+            eval_algorithm(train, test, k, a, evaluation, metrics, results, conf, slice=slice, iteration=slice)
 
     print_results(results)
     write_results_csv(results, conf, iteration=slice)
@@ -518,6 +523,79 @@ def eval_algorithm(train, test, key, algorithm, eval, metrics, results, conf, sl
     # send_message( 'algorithm ' + key + ' finished ' + ( 'for slice ' + str(slice) if slice is not None else '' ) )
 
     algorithm.clear()
+
+
+
+def eval_algorithm_incremental(train, test, key, algorithm, eval, metrics, results, conf, slice=None, iteration=None, out=True):
+    '''
+    Evaluate one single algorithm
+        --------
+        train : Dataframe
+            Training data
+        test: Dataframe
+            Test set
+        key: string
+            The automatically created key string for the algorithm
+        algorithm: algorithm object
+            Just the algorithm object, e.g., ContextKNN
+        eval: module
+            The module for evaluation, e.g., evaluation.evaluation_last
+        metrics: list of Metric
+            Optional string to add to the file name
+        results: dict
+            Result dictionary
+        conf: dict
+            Configuration dictionary
+        slice: int
+            Optional index for the window slice
+    '''
+    ts = time.time()
+    print('fit ', key)
+    # send_message( 'training algorithm ' + key )
+
+    if hasattr(algorithm, 'init'):
+        algorithm.init(train, test, slice=slice)
+
+    for m in metrics:
+        if hasattr(m, 'start'):
+            m.start(algorithm)
+
+
+    # prepare train data for day slicing
+    train = train.append(test)
+    train['day'] = (pd.to_datetime(train.Time, unit='s') - pd.Timestamp(0)).dt.days
+    train['day'] = train.groupby('SessionId')['day'].transform('min')
+
+    days = train.groupby('day').groups.keys()
+
+    for i, day in tqdm(enumerate(days), total=len(days)):
+        train_day = train[train.day == day]
+        if i > 55:
+            results[key] = eval.evaluate_sessions(algorithm, metrics, train, test, day)
+        algorithm.fit_incremental(train_day, test)
+
+    print(key, ' time: ', (time.time() - ts))
+    print_results(results)
+
+    # if 'results' in conf and 'pickle_models' in conf['results']:
+    #     try:
+    #         save_model(key, algorithm, conf)
+    #     except Exception:
+    #         print('could not save model for ' + key)
+
+    # for m in metrics:
+    #     if hasattr(m, 'start'):
+    #         m.stop(algorithm)
+
+    #results[key] = eval.evaluate_sessions(algorithm, metrics, test, train)
+    #if out:
+    #    write_results_csv({key: results[key]}, conf, extra=key, iteration=iteration)
+
+    # send_message( 'algorithm ' + key + ' finished ' + ( 'for slice ' + str(slice) if slice is not None else '' ) )
+
+    algorithm.clear()
+
+
 
 
 def write_results_csv(results, conf, iteration=None, extra=None):
@@ -916,6 +994,7 @@ def status(bot, update):
 if __name__ == '__main__':
 
     if len(sys.argv) > 1:
+        #import code; code.interact(local=dict(globals(), **locals()))
         main(sys.argv[1], out=sys.argv[2] if len(sys.argv) > 2 else None)
     else:
         print('File or folder expected.')

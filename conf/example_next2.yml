@@ -1,0 +1,86 @@
+type: single # single|window, maybe add opt
+key: baselines_and_models_and_hybrids #added to the csv names
+evaluation: evaluation #evaluation|evaluation_last|evaluation_multiple|evaluation_user_based|evaluation_user_based_multiple
+#evaluation: evaluation_multiple
+
+data:
+  name: 30music #added in the end of the csv names
+  folder: data/30music/slices/
+  prefix: 30music
+  slice_num: 1
+  #name: rsc15 #added in the end of the csv names
+  #folder: data/rsc15/prepared/
+  #prefix: yoochoose-clicks-100k
+  #slice_num:   #only window
+  opts: {sessions_test: 100}
+params:
+output:
+  folder: results/next/30music/
+
+results:
+  folder: results/next/30music/
+
+metrics:
+##- class: accuracy_multiple.Precision
+##  length: [1, 3,5,10,15,20]
+##- class: accuracy_multiple.Recall
+##  length: [1,3,5,10,15,20]
+##- class: accuracy_multiple.MAP
+##  length: [3,5,10,15,20]
+##- class: accuracy_multiple.NDCG
+##  length: [3,5,10,15,20]
+- class: accuracy.HitRate
+  length: [1,3,5,10,15,20]
+- class: accuracy.MRR
+  length: [3,5,10,15,20]
+- class: accuracy_multiple.NDCG
+  length: [3,5,10,15,20]
+- class: coverage.Coverage
+  length: [20]
+- class: popularity.Popularity
+  length: [20]
+- class: time_memory_usage.Time_usage_training
+- class: time_memory_usage.Time_usage_testing
+
+algorithms:
+- class: IR.tf_idf.TfIdf
+  params: { k: 20, sample_size: 500, similarity: cosine, tf_type: 'binary', idf_type: 'default' }
+  key: tf_idf
+- class: knn.vsknn.VMContextKNN
+  params: { k: 500, sample_size: 5000, weighting: quadratic , weighting_score: div, idf_weighting: 5, extend: True  }
+  key: vsknn
+#- class: ct.ct.ContextTree
+#  params: {}
+#  key: ct-pre
+#- class: gru4rec.gru4rec.GRU4Rec
+#  params: { loss: 'top1-max', final_act: 'linear', dropout_p_hidden: 0.1, learning_rate: 0.08, momentum: 0.1, constrained_embedding: False }
+#  key: gru4rec
+- class: knn.sknn.ContextKNN
+  params: { k: 500, sample_size: 500, similarity: cosine, extend: False }
+  key: sknn
+
+#- class: IR.tf_idf.TfIdf
+#  params: { k: 10, sample_size: 500, similarity: cosine, extend: False, tf_type: 'log_norm' }
+#  key: tf-log_idf
+#- class: IR.tf_idf.TfIdf
+#  params: { k: 10, sample_size: 500, similarity: cosine, extend: False, tf_type: 'binary' }
+#  key: tf-bin_idf
+
+#- class: IR.sknn.Sknn
+#  params: { k: 10, sample_size: 500, similarity: cosine, extend: False }
+#  key: ir_sknn
+#- class: knn.stan.STAN
+#  params:
+#    k: 1000
+#    sample_size: 10000
+#    #stan
+#    lambda_spw: 0.00001
+#    lambda_snh: 100
+#    lambda_inh: 4.2
+
+#- class: knn.iknn.ItemKNN
+#  params: {  }
+#  key: iknn
+#- class: knn.vsknn.VMContextKNN
+#  params: { k: 500, sample_size: 5000, weighting: quadratic , weighting_score: div, idf_weighting: 5, extend: True  }
+#  key: vsknn
