@@ -1,0 +1,51 @@
+type: window # single|window, maybe add opt
+key: next_knn #added to the csv names
+evaluation: evaluation
+data:
+  name: lastfm #added in the end of the csv names
+  folder: data/lastfm/prepared_window/
+  prefix: userid-timestamp-artid-artname-traid-traname
+  type: hdf #hdf (if there is no type, the default is csv)
+  slices: 5
+#  opts: {sessions_test: 500}
+params:
+  num_sessions: 20000
+  num_predicts: 20
+output:
+  folder: results/ir/next/lastfm/
+results:
+  folder: results/ir/next/lastfm/
+
+metrics:
+- class: accuracy.HitRate
+  length: [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]
+- class: accuracy.MRR
+  length: [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]
+- class: coverage.Coverage
+  length: [20]
+- class: popularity.Popularity
+  length: [20]
+- class: time_memory_usage.Time_usage_training
+- class: time_memory_usage.Time_usage_testing
+- class: time_memory_usage.Memory_usage
+
+algorithms:
+- class: IR.ir_model.IRModel
+  params: { k: 50, tf_type: 'raw', idf_type: 'default', item_ranking_method: 'sequential_alignment', aggregate_method: 'borda'}
+  key: ir_tf_idf
+- class: IR.ir_model.IRModel
+  params: { k: 1, tf_type: 'binary', idf_type: 'binary', item_ranking_method: 'sequential_alignment', aggregate_method: 'borda'}
+  key: ir_tf_idf
+- class: knn.vsknn.VMContextKNN
+  params:
+    k: 500
+    sample_size: 10000
+    weighting: quadratic
+    weighting_score: quadratic
+  key: vsknn
+- class: knn.sknn.ContextKNN
+  params:
+    k: 100
+    sample_size: 500
+    similarity: cosine
+  key: sknn

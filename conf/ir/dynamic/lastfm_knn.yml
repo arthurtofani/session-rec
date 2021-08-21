@@ -1,0 +1,86 @@
+type: window # single|window, maybe add opt
+key: online_knn #added to the csv names
+evaluation: evaluation_online
+data:
+  name: lastfm #added in the end of the csv names
+  folder: data/lastfm/prepared_window/
+  prefix: userid-timestamp-artid-artname-traid-traname
+  type: hdf #hdf (if there is no type, the default is csv)
+  slices: 1
+  slice_num: 1
+  #opts: {sessions_test: 50}
+params:
+  num_sessions: 20000
+  num_predicts: 20
+output:
+  folder: results/ir/test_online/lastfm/
+results:
+  folder: results/ir/test_online/lastfm/
+
+metrics:
+- class: accuracy.HitRate
+  length: [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]
+- class: accuracy.MRR
+  length: [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]
+- class: coverage.Coverage
+  length: [20]
+- class: popularity.Popularity
+  length: [20]
+- class: time_memory_usage.Time_usage_training
+- class: time_memory_usage.Time_usage_testing
+- class: time_memory_usage.Memory_usage
+
+algorithms:
+- class: IR.ir_model.IRModel
+  params: { k: 50, tf_type: 'raw', idf_type: 'default', item_ranking_method: 'sequential_alignment', aggregate_method: 'borda' }
+  key: ir_tf_idf
+- class: IR.ir_model.IRModel
+  params: { k: 1, tf_type: 'binary', idf_type: 'binary', item_ranking_method: 'sequential_alignment', aggregate_method: 'borda' }
+  key: ir_tf_idf
+- class: knn.vsknn.VMContextKNN
+  params:
+    k: 500
+    sample_size: 10000
+    weighting: quadratic
+    weighting_score: quadratic
+  key: vsknn
+- class: knn.sknn.ContextKNN
+  params:
+    k: 100
+    sample_size: 500
+    similarity: cosine
+  key: sknn
+- class: knn.stan.STAN
+  params:
+    k: 1000
+    sample_size: 10000
+    #stan
+    lambda_spw: 0.00001
+    lambda_snh: 100
+    lambda_inh: 4.2
+  key: stan-mrr
+- class: knn.stan.STAN
+  params:
+    k: 500
+    sample_size: 10000
+    #stan
+    lambda_spw: 2.1
+    lambda_snh: 100
+    lambda_inh: 16.8
+  key: stan-hr
+
+#- class: baselines.sr.SequentialRules
+#  params: { steps: 30, weighting: quadratic }
+#  key: sr
+#- class: IR.ir_model.IRModel
+#  params: { k: 50, tf_type: 'raw', idf_type: 'default', item_ranking_method: 'sequential_alignment', aggregate_method: 'borda', cut: 10 }
+#  key: ir_tf_idf
+#- class: IR.ir_model.IRModel
+#  params: { k: 50, tf_type: 'raw', idf_type: 'default', item_ranking_method: 'sequential_alignment', aggregate_method: 'borda', cut: 5 }
+#  key: ir_tf_idf
+#- class: IR.ir_model.IRModel
+#  params: { k: 50, tf_type: 'raw', idf_type: 'default', item_ranking_method: 'sequential_alignment', aggregate_method: 'borda', cut: 20 }
+#  key: ir_tf_idf
+#- class: IR.ir_model.IRModel
+#  params: { k: 50, tf_type: 'raw', idf_type: 'default', item_ranking_method: 'sequential_alignment', aggregate_method: 'borda', cut: 30 }
+#  key: ir_tf_idf

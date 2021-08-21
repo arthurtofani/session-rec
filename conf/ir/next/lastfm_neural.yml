@@ -1,0 +1,41 @@
+type: window # single|window, maybe add opt
+key: next_neural #added to the csv names
+evaluation: evaluation
+data:
+  name: lastfm #added in the end of the csv names
+  folder: data/lastfm/prepared_window/
+  prefix: userid-timestamp-artid-artname-traid-traname
+  type: hdf #hdf (if there is no type, the default is csv)
+  slices: 5
+#  opts: {sessions_test: 500}
+params:
+  num_sessions: 20000
+  num_predicts: 20
+output:
+  folder: results/ir/next/lastfm/
+results:
+  folder: results/ir/next/lastfm/
+
+metrics:
+- class: accuracy.HitRate
+  length: [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]
+- class: accuracy.MRR
+  length: [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]
+- class: coverage.Coverage
+  length: [20]
+- class: popularity.Popularity
+  length: [20]
+- class: time_memory_usage.Time_usage_training
+- class: time_memory_usage.Time_usage_testing
+- class: time_memory_usage.Memory_usage
+
+algorithms:
+- class: gru4rec.gru4rec.GRU4Rec
+  params: { loss: 'top1-max', final_act: 'linear', dropout_p_hidden: 0.1, learning_rate: 0.08, momentum: 0.1, n_epochs: 15 }
+  key: gru4rec-best
+#- class: gru4rec.gru4rec.GRU4Rec
+#  params: { loss: 'bpr-max', final_act: 'elu-0.5', dropout_p_hidden: 0.6, learning_rate: 0.08, momentum: 0.0, constrained_embedding: True }
+#  key: gru4rec-backup
+#- class: narm.narm.NARM
+#  params: { epochs: 20, lr: 0.007 }
+#  key: narm

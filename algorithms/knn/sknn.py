@@ -430,7 +430,9 @@ class ContextKNN:
         out : set
         '''
 
-        self.relevant_sessions = self.relevant_sessions | self.sessions_for_item( input_item_id );
+        #import code; code.interact(local=dict(globals(), **locals()))
+        if self.sessions_for_item( input_item_id ):
+            self.relevant_sessions = self.relevant_sessions | self.sessions_for_item( input_item_id );
 
         if self.sample_size == 0: #use all session as possible neighbors
 
@@ -438,11 +440,11 @@ class ContextKNN:
             return self.relevant_sessions
 
         else:  # sample some sessions
-
-            self.relevant_sessions = self.relevant_sessions | self.sessions_for_item( input_item_id );
+            if self.sessions_for_item( input_item_id ):
+                self.relevant_sessions = self.relevant_sessions | self.sessions_for_item( input_item_id )
 
             #import code; code.interact(local=dict(globals(), **locals()))
-            return self.relevant_sessions
+            #return self.relevant_sessions
             if len(self.relevant_sessions) > self.sample_size:
 
                 if self.sampling == 'recent':

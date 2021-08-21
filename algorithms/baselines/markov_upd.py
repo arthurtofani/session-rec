@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+from tqdm import tqdm
 from math import log10
 import collections as col
 from datetime import datetime as dt
@@ -55,7 +56,6 @@ class MarkovModel:
 
         cur_session = -1
         prev_item = -1
-        rules = dict()
 
         index_session = train.columns.get_loc( self.session_key )
         index_item = train.columns.get_loc( self.item_key )
@@ -67,20 +67,19 @@ class MarkovModel:
             if session_id != cur_session:
                 cur_session = session_id
             else:
-                if not prev_item in rules :
-                    rules[prev_item] = dict()
+                if not prev_item in self.rules :
+                    self.rules[prev_item] = dict()
 
-                if not item_id in rules[prev_item]:
-                    rules[prev_item][item_id] = 0
+                if not item_id in self.rules[prev_item]:
+                    self.rules[prev_item][item_id] = 0
 
-                rules[prev_item][item_id] += 1
+                self.rules[prev_item][item_id] += 1
 
             prev_item = item_id
 
-        if self.pruning > 0 :
-            self.prune( rules )
 
-        self.rules = rules
+        #import code; code.interact(local=dict(globals(), **locals()))
+        #self.rules = rules
 
     def predict_next(self, session_id, input_item_id, predict_for_item_ids, skip=False, mode_type='view', timestamp=0):
         '''
@@ -117,6 +116,7 @@ class MarkovModel:
             for key in self.rules[input_item_id]:
                 preds[ predict_for_item_ids == key ] = self.rules[input_item_id][key]
 
+        #import code; code.interact(local=dict(globals(), **locals()))
         #test
 #         for i in range(2,4):
 #             if len(self.session_items) >= i :

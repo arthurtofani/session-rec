@@ -1,11 +1,11 @@
 ---
 type: retrain # single|window
-preprocessor: music # 
+preprocessor: music #
 data:
   folder: data/nowplaying/raw/
   prefix: nowplaying
 
-filter: 
+filter:
   min_item_support: 2
   min_session_length: 5
 

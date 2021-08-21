@@ -1,0 +1,44 @@
+type: window # single|window, maybe add opt
+key: online_rules #added to the csv names
+evaluation: evaluation_online
+data:
+  name: nowplaying #added in the end of the csv names
+  folder: data/nowplaying/window/
+  prefix: nowplaying
+  slices: 1
+  slice_num: 2
+  #opts: {sessions_test: 50}
+params:
+  num_sessions: 20000
+  num_predicts: 20
+output:
+  folder: results/ir/test_online/nowplaying/
+results:
+  folder: results/ir/test_online/nowplaying/
+metrics:
+- class: accuracy.HitRate
+  length: [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]
+- class: accuracy.MRR
+  length: [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]
+- class: coverage.Coverage
+  length: [20]
+- class: popularity.Popularity
+  length: [20]
+- class: time_memory_usage.Time_usage_training
+- class: time_memory_usage.Time_usage_testing
+- class: time_memory_usage.Memory_usage
+
+algorithms:
+- class: baselines.markov_upd.MarkovModel
+  params: {}
+  key: markov
+- class: IR.ir_model_mk.IRModel
+  params: { past_items: 4 }
+  key: ir_mc
+- class: baselines.sr_upd.SequentialRules
+  params: { steps: 30, weighting: quadratic }
+  key: sr
+- class: baselines.ar_upd.AssociationRules
+  params: {}
+  key: ar
+
