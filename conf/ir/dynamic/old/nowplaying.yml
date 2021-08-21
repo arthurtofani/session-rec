@@ -1,0 +1,68 @@
+type: single # single|window, maybe add opt
+key: dynamic #added to the csv names
+evaluation: evaluation_online
+
+data:
+  name: nowplaying #added in the end of the csv names
+  folder: data/nowplaying/single/
+  prefix: nowplaying
+  slice_num:
+params:
+  num_sessions: 20000
+  num_predicts: 20
+output:
+  folder: results/ir/dynamic/nowplaying/
+results:
+  folder: results/ir/dynamic/nowplaying/
+
+metrics:
+##- class: accuracy_multiple.Precision
+##  length: [1, 3,5,10,15,20]
+##- class: accuracy_multiple.Recall
+##  length: [1,3,5,10,15,20]
+##- class: accuracy_multiple.MAP
+##  length: [3,5,10,15,20]
+##- class: accuracy_multiple.NDCG
+##  length: [3,5,10,15,20]
+- class: accuracy.HitRate
+  length: [1,3,5,10,15,20]
+- class: accuracy.MRR
+  length: [3,5,10,15,20]
+- class: accuracy_multiple.NDCG
+  length: [3,5,10,15,20]
+- class: coverage.Coverage
+  length: [20]
+- class: popularity.Popularity
+  length: [20]
+- class: time_memory_usage.Time_usage_training
+- class: time_memory_usage.Time_usage_testing
+
+algorithms:
+#- class: gru4rec.gru4rec.GRU4Rec
+#  params: { loss: 'top1-max', final_act: 'linear', dropout_p_hidden: 0.1, learning_rate: 0.08, momentum: 0.1 }
+#  key: gru4rec-best
+##- class: IR.ir_model.IRModel
+##  params: { k: 1, tf_type: 'binary', idf_type: 'binary' }
+##  key: ir
+- class: baselines.markov_upd.MarkovModel
+  params: {}
+  key: markov
+#- class: knn.vsknn.VMContextKNN
+#  params:
+#    k: 500
+#    sample_size: 10000
+#    weighting: quadratic
+#    weighting_score: quadratic
+#  key: vsknn
+#- class: baselines.ar.AssociationRules
+#  params: {}
+#  key: ar
+#- class: baselines.sr.SequentialRules
+#  params: { steps: 30, weighting: quadratic }
+#  key: sr
+#- class: knn.sknn.ContextKNN
+#  params:
+#    k: 100
+#    sample_size: 500
+#    similarity: cosine
+#  key: sknn

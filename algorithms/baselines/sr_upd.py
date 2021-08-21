@@ -71,7 +71,6 @@ class SequentialRules:
 
         cur_session = -1
         last_items = []
-        rules = dict()
 
         index_session = train.columns.get_loc(self.session_key)
         index_item = train.columns.get_loc(self.item_key)
@@ -87,11 +86,11 @@ class SequentialRules:
                 for i in range(1, self.steps + 1 if len(last_items) >= self.steps else len(last_items) + 1):
                     prev_item = last_items[-i]
 
-                    if not prev_item in rules:
-                        rules[prev_item] = dict()
+                    if not prev_item in self.rules:
+                        self.rules[prev_item] = dict()
 
-                    if not item_id in rules[prev_item]:
-                        rules[prev_item][item_id] = 0
+                    if not item_id in self.rules[prev_item]:
+                        self.rules[prev_item][item_id] = 0
 
                     weight = getattr(self, self.weighting)(i)
                     if self.idf_weight:
@@ -99,14 +98,14 @@ class SequentialRules:
                             weight *= self.idf[prev_item]
                         elif self.idf_weight == 2:
                             weight += self.idf[prev_item]
-                    rules[prev_item][item_id] += weight
+                    self.rules[prev_item][item_id] += weight
 
             last_items.append(item_id)
 
-        if self.pruning > 0:
-            self.prune(rules)
+        #if self.pruning > 0:
+        #    self.prune(self.rules)
 
-        self.rules = rules
+        #self.self.rules = self.rules
 
     #         print( 'Size of map: ', asizeof.asizeof(self.rules))
 

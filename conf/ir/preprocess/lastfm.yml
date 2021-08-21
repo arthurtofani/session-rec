@@ -1,0 +1,44 @@
+---
+type: window # single|window
+mode: session_based
+preprocessor: lastfm_aware #
+data:
+  folder: data/lastfm/raw/
+  prefix: lastfm
+
+filter:
+  min_item_support: 2
+  min_session_length: 5
+
+params:
+  days_test: 5
+  days_train: 90
+  num_slices: 5 #only window
+  days_offset: 0 #only window
+  days_shift: 60 #only window
+
+output:
+  folder: data/lastfm/window/
+
+
+type: window # single
+mode: session_based # session_based | session_aware
+preprocessor: lastfm_aware # dataset (folder) name
+data:
+  folder: data/lastfm/
+  prefix: userid-timestamp-artid-artname-traid-traname
+
+filter:
+  min_item_support: 5
+  min_session_length: 2   # 3
+  min_user_sessions: 3    # need to be 3, because we need at least 1 for each training, validation and test set!
+  max_session_length: 20
+
+params:
+  num_slices: 5
+  days_offset: 500 # to skip first 1/3 of data
+  days_shift: 217 # total_interval = 1587
+  min_session_length: 2 #3
+
+output:
+  folder: data/lastfm/prepared_window/

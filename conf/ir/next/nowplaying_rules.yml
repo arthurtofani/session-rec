@@ -1,0 +1,61 @@
+type: window # single|window, maybe add opt
+key: next_rules #added to the csv names
+evaluation: evaluation
+data:
+  name: nowplaying #added in the end of the csv names
+  folder: data/nowplaying/window/
+  prefix: nowplaying
+  slices: 5
+#  opts: {sessions_test: 500}
+params:
+  num_sessions: 20000
+  num_predicts: 20
+output:
+  folder: results/ir/next/nowplaying/
+results:
+  folder: results/ir/next/nowplaying/
+
+metrics:
+- class: accuracy.HitRate
+  length: [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]
+- class: accuracy.MRR
+  length: [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]
+- class: coverage.Coverage
+  length: [20]
+- class: popularity.Popularity
+  length: [20]
+- class: time_memory_usage.Time_usage_training
+- class: time_memory_usage.Time_usage_testing
+- class: time_memory_usage.Memory_usage
+
+algorithms:
+- class: IR.ir_model_mk.IRModel
+  params: { past_items: 0 }
+  key: ir_mc
+- class: IR.ir_model_mk.IRModel
+  params: { past_items: 1 }
+  key: ir_mc
+- class: IR.ir_model_mk.IRModel
+  params: { past_items: 2 }
+  key: ir_mc
+- class: IR.ir_model_mk.IRModel
+  params: { past_items: 3 }
+  key: ir_mc
+- class: IR.ir_model_mk.IRModel
+  params: { past_items: 4 }
+  key: ir_mc
+- class: IR.ir_model_mk.IRModel
+  params: { past_items: 5 }
+  key: ir_mc
+- class: IR.ir_model_mk.IRModel
+  params: { past_items: 6 }
+  key: ir_mc
+- class: baselines.markov.MarkovModel
+  params: {}
+  key: markov
+- class: baselines.ar.AssociationRules
+  params: {}
+  key: ar
+- class: baselines.sr.SequentialRules
+  params: { steps: 30, weighting: quadratic }
+  key: sr

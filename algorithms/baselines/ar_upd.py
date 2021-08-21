@@ -2,10 +2,8 @@ import numpy as np
 import pandas as pd
 from math import log10
 import collections as col
-from datetime import datetime as dt
-from datetime import timedelta as td
 
-class MarkovModel:
+class AssociationRules:
     '''
     SequentialRules(steps = 3, weighting='div', pruning=0.0)
 
@@ -16,16 +14,14 @@ class MarkovModel:
     weighting : string
         TODO. (Default value: 3)
     pruning : float
-        TODO. (Default value: 0)
+        TODO. (Default value: 20)
 
     '''
 
-    def __init__( self, pruning=20, last_n_days=None, session_key='SessionId', item_key='ItemId', time_key='Time' ):
+    def __init__( self, pruning=20, session_key='SessionId', item_key='ItemId' ):
         self.pruning = pruning
-        self.last_n_days = last_n_days
         self.session_key = session_key
         self.item_key = item_key
-        self.time_key = time_key
         self.session = -1
         self.session_items = []
         self.rules = dict()
@@ -43,44 +39,59 @@ class MarkovModel:
 
         '''
 
-        if self.last_n_days != None:
-
-            max_time = dt.fromtimestamp( data[self.time_key].max() )
-            date_threshold = max_time.date() - td( self.last_n_days )
-            stamp = dt.combine(date_threshold, dt.min.time()).timestamp()
-            train = data[ data[self.time_key] >= stamp ]
-
-        else:
-            train = data
-
         cur_session = -1
-        prev_item = -1
-        rules = dict()
+        last_items = []
+        #rules = dict()
 
-        index_session = train.columns.get_loc( self.session_key )
-        index_item = train.columns.get_loc( self.item_key )
+        index_session = data.columns.get_loc( self.session_key )
+        index_item = data.columns.get_loc( self.item_key )
 
-        for row in train.itertuples( index=False ):
+        for row in data.itertuples( index=False ):
 
             session_id, item_id = row[index_session], row[index_item]
 
             if session_id != cur_session:
                 cur_session = session_id
+                last_items = []
             else:
-                if not prev_item in rules :
-                    rules[prev_item] = dict()
+                for item_id2 in last_items:
 
-                if not item_id in rules[prev_item]:
-                    rules[prev_item][item_id] = 0
+                    if not item_id in self.rules:
+                        self.rules[item_id] = dict()
 
-                rules[prev_item][item_id] += 1
+                    if not item_id2 in self.rules:
+                        self.rules[item_id2] = dict()
 
-            prev_item = item_id
+                    if not item_id in self.rules[item_id2]:
+                        self.rules[item_id2][item_id] = 0
 
-        if self.pruning > 0 :
-            self.prune( rules )
+                    if not item_id2 in self.rules[item_id]:
+                        self.rules[item_id][item_id2] = 0
 
-        self.rules = rules
+                    self.rules[item_id][item_id2] += 1
+                    self.rules[item_id2][item_id] += 1
+
+            last_items.append(item_id)
+
+        #if self.pruning > 0 :
+        #    self.prune( rules )
+
+        #self.rules = rules
+
+    def linear(self, i):
+        return 1 - (0.1*i) if i <= 10 else 0
+
+    def same(self, i):
+        return 1
+
+    def div(self, i):
+        return 1/i
+
+    def log(self, i):
+        return 1/(log10(i+1.7))
+
+    def quadratic(self, i):
+        return 1/(i*i)
 
     def predict_next(self, session_id, input_item_id, predict_for_item_ids, skip=False, mode_type='view', timestamp=0):
         '''
@@ -116,13 +127,6 @@ class MarkovModel:
         if input_item_id in self.rules:
             for key in self.rules[input_item_id]:
                 preds[ predict_for_item_ids == key ] = self.rules[input_item_id][key]
-
-        #test
-#         for i in range(2,4):
-#             if len(self.session_items) >= i :
-#                 item = self.session_items[-i]
-#                 for key in self.rules[ item ]:
-#                     preds[ predict_for_item_ids == key ] += self.rules[item][key] * (1/i)
 
         series = pd.Series(data=preds, index=predict_for_item_ids)
 

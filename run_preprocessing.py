@@ -6,7 +6,7 @@ preprocessing method ["info","org","days_test","slice"]
     org: from gru4rec (last day => test set)
     org_min_date: from gru4rec (last day => test set) but from a minimal date onwards
     days_test: adapted from gru4rec (last N days => test set)
-    slice: new (create multiple train-test-combinations with a window approach  
+    slice: new (create multiple train-test-combinations with a window approach
     buys: load buys and safe file to prepared
 '''
 import sys
@@ -16,50 +16,50 @@ import importlib
 import traceback
 import os
 
-def main( conf ): 
+def main( conf ):
     '''
     Execute experiments for the given configuration path
         --------
         conf: string
             Configuration path. Can be a single file or a folder.
         out: string
-            Output folder path for endless run listening for new configurations. 
+            Output folder path for endless run listening for new configurations.
     '''
     print( 'Checking {}'.format( conf ) )
-    
+
     file = Path( conf )
     if file.is_file():
-        
+
         print( 'Loading file' )
         stream = open( str(file) )
         c = yaml.load(stream)
         stream.close()
         print( 'processing config ' + conf )
-        
+
         try:
-        
+
             run_file( c )
             print( 'finished config ' + conf )
-            
+
         except (KeyboardInterrupt, SystemExit):
-                        
-            print( 'manually aborted config ' + conf )            
+
+            print( 'manually aborted config ' + conf )
             raise
-        
+
         except Exception:
             print( 'error for config ', file )
             traceback.print_exc()
-            
+
         exit()
-    
+
     print( 'File not found: ' + conf )
-    
+
 def run_file( conf ):
-    
+
     #include preprocessing
     preprocessor = load_preprocessor( conf )
-    
-    #load data from raw and transform
+
+    # load data from raw and transform
     if 'sample_percentage' in conf['data']:
         data = preprocessor.load_data(conf['data']['folder'] + conf['data']['prefix'], sample_percentage=conf['data']['sample_percentage'])
     else:
@@ -85,7 +85,7 @@ def run_file( conf ):
             method_to_call( data, conf['output']['folder'] + conf['data']['prefix'], **conf['params']  )
         else:
             print( 'preprocessing type not supported' )
-    
+
 
 def load_preprocessor( conf ):
     '''
@@ -111,9 +111,9 @@ if __name__ == '__main__':
     '''
     Run the preprocessing configured above.
     '''
-    
-    if len( sys.argv ) == 2: 
+
+    if len( sys.argv ) == 2:
         main( sys.argv[1] ) # for example: conf/preprocess/window/rsc15.yml
     else:
         print( 'Preprocessing configuration expected.' )
-    
+

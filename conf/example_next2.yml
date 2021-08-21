@@ -43,44 +43,15 @@ metrics:
 - class: time_memory_usage.Time_usage_testing
 
 algorithms:
-- class: IR.tf_idf.TfIdf
-  params: { k: 20, sample_size: 500, similarity: cosine, tf_type: 'binary', idf_type: 'default' }
+- class: IR.ir_model.IRModel
+  params: { k: 1, tf_type: 'binary', idf_type: 'binary' }
   key: tf_idf
 - class: knn.vsknn.VMContextKNN
   params: { k: 500, sample_size: 5000, weighting: quadratic , weighting_score: div, idf_weighting: 5, extend: True  }
   key: vsknn
-#- class: ct.ct.ContextTree
-#  params: {}
-#  key: ct-pre
-#- class: gru4rec.gru4rec.GRU4Rec
-#  params: { loss: 'top1-max', final_act: 'linear', dropout_p_hidden: 0.1, learning_rate: 0.08, momentum: 0.1, constrained_embedding: False }
-#  key: gru4rec
 - class: knn.sknn.ContextKNN
-  params: { k: 500, sample_size: 500, similarity: cosine, extend: False }
+  params: { k: 500, sample_size: 5000, similarity: 'cosine'  }
   key: sknn
-
-#- class: IR.tf_idf.TfIdf
-#  params: { k: 10, sample_size: 500, similarity: cosine, extend: False, tf_type: 'log_norm' }
-#  key: tf-log_idf
-#- class: IR.tf_idf.TfIdf
-#  params: { k: 10, sample_size: 500, similarity: cosine, extend: False, tf_type: 'binary' }
-#  key: tf-bin_idf
-
-#- class: IR.sknn.Sknn
-#  params: { k: 10, sample_size: 500, similarity: cosine, extend: False }
-#  key: ir_sknn
-#- class: knn.stan.STAN
-#  params:
-#    k: 1000
-#    sample_size: 10000
-#    #stan
-#    lambda_spw: 0.00001
-#    lambda_snh: 100
-#    lambda_inh: 4.2
-
-#- class: knn.iknn.ItemKNN
-#  params: {  }
-#  key: iknn
-#- class: knn.vsknn.VMContextKNN
-#  params: { k: 500, sample_size: 5000, weighting: quadratic , weighting_score: div, idf_weighting: 5, extend: True  }
-#  key: vsknn
+- class: baselines.markov.MarkovModel
+  params: {}
+  key: markov
