@@ -18,4 +18,4 @@ params:
   days_shift: 60 #only window
 
 output:
-  folder: data/30music/window/
+  folder: data/30music/windowx/

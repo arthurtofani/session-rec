@@ -94,7 +94,7 @@ def load_preprocessor( conf ):
         conf : conf
             Just the last part of the path, e.g., evaluation_last
     '''
-    return importlib.import_module( 'preprocessing.'+conf['mode']+'.preprocess_' + conf['preprocessor'] )
+    return importlib.import_module( 'preprocessing.' + conf['mode'] + '.preprocess_' + conf['preprocessor'])
 
 def ensure_dir(file_path):
     '''

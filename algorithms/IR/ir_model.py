@@ -48,6 +48,16 @@ class Bow():
                              tf_type, idf_type)
         return Bow.from_dict(vec)
 
+    def proximity_ranking(self, session_items):
+        els, j, _ = np.intersect1d(self.components, session_items, return_indices=True)
+        arr = np.arange(len(self.components))
+        sj0 = len(j)
+        sj1 = np.sum(j)
+        sj2 = np.sum(j**2)
+        s = 1/(1 + (sj2 - (2 * arr * sj1) + np.power(arr, 2) * sj0))
+        return Bow.from_dict(dict(zip(self.components, s))).rem(els)
+
+
     def sequential_alignment(self, session_items):
         els, intsc, _ = np.intersect1d(self.components, session_items, return_indices=True)
         s = np.zeros(len(self.components))
@@ -167,20 +177,23 @@ class IRModel:
             if len(top_sessions) > 0:
                 if self.item_ranking_method == "sequential_alignment":
                     timeord_its = [Bow(self.doc_index[d]).sequential_alignment(self.curr_items) for d in top_sessions]
-                    if self.aggregate_method == "borda":
-                        bow_time = Bow.from_dict(self.aggregate_rank(timeord_its, cut=self.cut)).norm()
-                    if self.aggregate_method == "sum":
-                        vec_x = timeord_its[0].vec
-                        for bow_y in range(1, len(timeord_its)):
-                            vec_y = timeord_its[bow_y].vec
-                            vec_x = {k: vec_x.get(k, 0) + vec_y.get(k, 0) for k in set(vec_x) | set(vec_y)}
-                        bow_time = Bow.from_dict(vec_x)
-                    if self.aggregate_method == "multiply":
-                        vec_x = timeord_its[0].vec
-                        for bow_y in range(1, len(timeord_its)):
-                            vec_y = timeord_its[bow_y].vec
-                            vec_x = {k: vec_x.get(k, 0) * vec_y.get(k, 0) for k in set(vec_x) | set(vec_y)}
-                        bow_time = Bow.from_dict(vec_x)
+                if self.item_ranking_method == "proximity_ranking":
+                    timeord_its = [Bow(self.doc_index[d]).proximity_distance(self.curr_items) for d in top_sessions]
+
+                if self.aggregate_method == "borda":
+                    bow_time = Bow.from_dict(self.aggregate_rank(timeord_its, cut=self.cut)).norm()
+                if self.aggregate_method == "sum":
+                    vec_x = timeord_its[0].vec
+                    for bow_y in range(1, len(timeord_its)):
+                        vec_y = timeord_its[bow_y].vec
+                        vec_x = {k: vec_x.get(k, 0) + vec_y.get(k, 0) for k in set(vec_x) | set(vec_y)}
+                    bow_time = Bow.from_dict(vec_x)
+                if self.aggregate_method == "multiply":
+                    vec_x = timeord_its[0].vec
+                    for bow_y in range(1, len(timeord_its)):
+                        vec_y = timeord_its[bow_y].vec
+                        vec_x = {k: vec_x.get(k, 0) * vec_y.get(k, 0) for k in set(vec_x) | set(vec_y)}
+                    bow_time = Bow.from_dict(vec_x)
                         #import code; code.interact(local=dict(globals(), **locals()))
                         #pass
                 else:
