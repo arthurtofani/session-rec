@@ -58,7 +58,6 @@ def main(conf, out=None):
         stream.close()
 
         try:
-
             run_file(c)
             send_message('finished config ' + conf)
 
@@ -182,7 +181,6 @@ def run_single(conf, slice=0):
             Optional index for the window slice
     '''
     print('run test single')
-
     algorithms = create_algorithms_dict(conf['algorithms'])
     metrics = create_metric_list(conf['metrics'])
     evaluation = load_evaluation(conf['evaluation'])
@@ -229,7 +227,7 @@ def run_single(conf, slice=0):
     write_results_csv(results, conf, iteration=slice)
 
 
-def run_opt_single(conf, iteration, globals):
+def run_opt_single(conf, iteration, glbs):
     '''
     Evaluate the algorithms for a single split
         --------
@@ -239,12 +237,11 @@ def run_opt_single(conf, iteration, globals):
             Optional index for the window slice
     '''
     print('run test opt single')
-
-    algorithms = create_algorithms_dict(conf['algorithms'])
+    algorithms = create_algorithms_dict(conf['algorithms'], include_params=True)
     for k, a in algorithms.items():
-        aclass = type(a)
-        if not aclass in globals:
-            globals[aclass] = {'key': '', 'best': -1}
+        aclass = type(a[0])
+        if not aclass in glbs:
+            glbs[aclass] = {'key': '', 'best': -1, 'params': a[1]}
 
     metrics = create_metric_list(conf['metrics'])
     metric_opt = create_metric(conf['optimize'])
@@ -278,24 +275,27 @@ def run_opt_single(conf, iteration, globals):
 
     results = {}
 
-    for k, a in algorithms.items():
+
+    for k, (a, params) in algorithms.items():
         eval_algorithm(train, test, k, a, evaluation, metrics, results, conf, iteration=iteration, out=False)
 
     write_results_csv(results, conf, iteration=iteration)
 
-    for k, a in algorithms.items():
+    for k, (a, params) in algorithms.items():
         aclass = type(a)
         current_value = results[k][0][1]
-        if globals[aclass]['best'] < current_value:
+        if glbs[aclass]['best'] < current_value:
             print('found new best configuration')
             print(k)
-            print('improvement from {} to {}'.format(globals[aclass]['best'], current_value))
-            send_message('improvement for {} from {} to {} in test {}'.format(k, globals[aclass]['best'], current_value,
+            print(params)
+            print('improvement from {} to {}'.format(glbs[aclass]['best'], current_value))
+            send_message('improvement for {} from {} to {} in test {}'.format(k, glbs[aclass]['best'], current_value,
                                                                               iteration))
-            globals[aclass]['best'] = current_value
-            globals[aclass]['key'] = k
+            glbs[aclass]['best'] = current_value
+            glbs[aclass]['best_params'] = params
+            glbs[aclass]['key'] = k
 
-    globals['results'].append(results)
+    glbs['results'].append(results)
 
     del algorithms
     del metrics
@@ -304,7 +304,7 @@ def run_opt_single(conf, iteration, globals):
     gc.collect()
 
 
-def run_bayopt_single(conf, algorithms, iteration, globals):
+def run_bayopt_single(conf, algorithms, iteration, glbs):
     '''
     Evaluate the algorithms for a single split
         --------
@@ -317,8 +317,8 @@ def run_bayopt_single(conf, algorithms, iteration, globals):
 
     for k, a in algorithms.items():
         aclass = type(a)
-        if not aclass in globals:
-            globals[aclass] = {'key': '', 'best': -1}
+        if not aclass in glbs:
+            glbs[aclass] = {'key': '', 'best': -1}
 
     metrics = create_metric_list(conf['metrics'])
     metric_opt = create_metric(conf['optimize'])
@@ -360,18 +360,18 @@ def run_bayopt_single(conf, algorithms, iteration, globals):
     for k, a in algorithms.items():
         aclass = type(a)
         current_value = results[k][0][1]
-        if globals[aclass]['best'] < current_value:
+        if glbs[aclass]['best'] < current_value:
             print('found new best configuration')
             print(k)
-            print('improvement from {} to {}'.format(globals[aclass]['best'], current_value))
-            send_message('improvement for {} from {} to {} in test {}'.format(k, globals[aclass]['best'], current_value,
+            print('improvement from {} to {}'.format(glbs[aclass]['best'], current_value))
+            send_message('improvement for {} from {} to {} in test {}'.format(k, glbs[aclass]['best'], current_value,
                                                                               iteration))
-            globals[aclass]['best'] = current_value
-            globals[aclass]['key'] = k
+            glbs[aclass]['best'] = current_value
+            glbs[aclass]['key'] = k
 
-        globals['current'] = current_value
+        glbs['current'] = current_value
 
-    globals['results'].append(results)
+    glbs['results'].append(results)
 
     del algorithms
     del metrics
@@ -413,19 +413,29 @@ def run_opt(conf):
     iterations = conf['optimize']['iterations'] if 'optimize' in conf and 'iterations' in conf['optimize'] else 100
     start = conf['optimize']['iterations_skip'] if 'optimize' in conf and 'iterations_skip' in conf['optimize'] else 0
     print('run opt with {} iterations starting at {}'.format(iterations, start))
-
-    globals = {}
-    globals['results'] = []
+    glbs = {}
+    glbs['results'] = []
 
     for i in range(start, iterations):
         print('start random test ', str(i))
-        run_opt_single(conf, i, globals)
+        run_opt_single(conf, i, glbs)
 
     global_results = {}
-    for results in globals['results']:
+    for results in glbs['results']:
         for key, value in results.items():
             global_results[key] = value
 
+    res = glbs['results']
+    del(glbs['results'])
+    print('**********RESULTS*************')
+    for k in glbs.keys():
+        obj = {**glbs[k]['best_params'], 'algorithm': glbs[k]['key'], 'best_value': glbs[k]['best']}
+        dt = pd.DataFrame.from_dict([obj]).T.reset_index()
+        dt.columns = ['param', 'value']
+        print(dt)
+        dt.to_csv(conf['results']['folder'] + conf['key'] + '_' + glbs[k]['key'] + '.csv', index=False)
+
+    #import code; commandhandler.interact(local=dict(globals(), **locals()))
     write_results_csv(global_results, conf)
 
 
@@ -441,8 +451,8 @@ def run_bayopt(conf):
     start = conf['optimize']['iterations_skip'] if 'optimize' in conf and 'iterations_skip' in conf['optimize'] else 0
     print('run opt with {} iterations starting at {}'.format(iterations, start))
 
-    globals = {}
-    globals['results'] = []
+    glbs = {}
+    glbs['results'] = []
 
     for entry in conf['algorithms']:
 
@@ -458,12 +468,12 @@ def run_bayopt(conf):
 
             algo_instance = create_algorithm_dict( entry, params )
 
-            run_bayopt_single(conf, algo_instance, i, globals)
-            res = globals['current']
+            run_bayopt_single(conf, algo_instance, i, glbs)
+            res = glbs['current']
             opt.tell(suggested, -1 * res)
 
     global_results = {}
-    for results in globals['results']:
+    for results in glbs['results']:
         for key, value in results.items():
             global_results[key] = value
 
@@ -516,7 +526,6 @@ def eval_algorithm(train, test, key, algorithm, eval, metrics, results, conf, sl
     for m in metrics:
         if hasattr(m, 'start'):
             m.stop(algorithm)
-
 
     results[key] = eval.evaluate_sessions(algorithm, metrics, test, train)
     if out:
@@ -578,7 +587,6 @@ def eval_algorithm_incremental(train, test, key, algorithm, eval, metrics, resul
     print('total reward:', df.reward.sum())
     print('total reward norm:', df.reward_norm.sum())
     df['key'] = key
-    #import code; code.interact(local=dict(globals(), **locals()))
     folder = conf['results']['folder']
     file = os.path.join(folder, 'dyn_%s.%s.csv' % (conf['key'], conf['data']['slice_num']))
     ensure_dir(file)
@@ -704,16 +712,16 @@ def load_evaluation(module):
     return importlib.import_module('evaluation.' + module)
 
 
-def create_algorithms_dict(list):
+def create_algorithms_dict(lst, include_params=False):
     '''
     Create algorithm instances from the list of algorithms in the configuration
         --------
-        list : list of dicts
+        lst : list of dicts
             Dicts represent a single algorithm with class, a key, and optionally a param dict
     '''
 
     algorithms = {}
-    for algorithm in list:
+    for algorithm in lst:
         Class = load_class('algorithms.' + algorithm['class'])
 
         default_params = algorithm['params'] if 'params' in algorithm else {}
@@ -762,8 +770,10 @@ def create_algorithms_dict(list):
                     algorithms[key + kv] = instance
         else:
             instance = Class(**params)
-            algorithms[key] = instance
-
+            if include_params:
+                algorithms[key] = (instance, params)
+            else:
+                algorithms[key] = instance
     return algorithms
 
 
@@ -1010,7 +1020,6 @@ def status(bot, update):
 if __name__ == '__main__':
 
     if len(sys.argv) > 1:
-        #import code; code.interact(local=dict(globals(), **locals()))
         main(sys.argv[1], out=sys.argv[2] if len(sys.argv) > 2 else None)
     else:
         print('File or folder expected.')

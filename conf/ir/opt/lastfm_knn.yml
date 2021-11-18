@@ -1,0 +1,58 @@
+type: opt
+key: next_knn #added to the csv names
+evaluation: evaluation
+data:
+  name: lastfm #added in the end of the csv names
+  folder: data/lastfm/prepared_window/
+  prefix: userid-timestamp-artid-artname-traid-traname.0
+  type: hdf #hdf (if there is no type, the default is csv)
+  slices: 1
+  opts: {sessions_test: 100}
+#params:
+#  num_sessions: 1000
+#  num_predicts: 20
+output:
+  folder: results/ir/next/lastfm/opt/out/
+results:
+  folder: results/ir/next/lastfm/opt/results/
+
+metrics:
+- class: accuracy.HitRate
+  length: [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]
+- class: accuracy.MRR
+  length: [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]
+
+optimize:
+  class: accuracy.MRR
+  length: [20]
+  iterations: 100 #optional
+
+algorithms:
+#- class: knn.vsknn.VMContextKNN
+#  params_opt:
+#    k: [50, 100, 500, 1000, 1500]
+#    sample_size: [500, 1000, 2500, 5000, 10000]
+#    weighting: ['same', 'div', 'linear', 'quadratic', 'log']
+#    weighting_score: ['same', 'div', 'linear', 'quadratic', 'log']
+#  key: vsknn
+- class: IR.ir_model.IRModel
+  params_opt:
+    k: [1, 5, 10, 50, 100, 500]
+    tf_type: [binary, raw, log_norm]
+    idf_type: [binary, default]
+    item_ranking_method: [sequential_alignment]
+    aggregate_method: [borda]
+  key: ir_tfidf
+
+##- class: knn.sknn.ContextKNN
+##  params:
+##    k: 100
+##    sample_size: 500
+##    similarity: cosine
+##  key: sknn
+##- class: IR.ir_model.IRModel
+##  params: { k: 50, tf_type: 'raw', idf_type: 'default', item_ranking_method: 'sequential_alignment', aggregate_method: 'borda'}
+##  key: ir_tf_idf
+##- class: IR.ir_model.IRModel
+##  params: { k: 1, tf_type: 'binary', idf_type: 'binary', item_ranking_method: 'sequential_alignment', aggregate_method: 'borda'}
+##  key: ir_tf_idf

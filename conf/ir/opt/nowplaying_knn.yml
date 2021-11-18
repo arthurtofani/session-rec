@@ -1,47 +1,48 @@
-#type: window # single|window, maybe add opt
 type: opt
 key: next_knn #added to the csv names
 evaluation: evaluation
 data:
-  name: 30music #added in the end of the csv names
-  folder: data/30music/window/
-  prefix: 30music
-  slices: 5
-#  opts: {sessions_test: 500}
-params:
-  num_sessions: 20000
-  num_predicts: 20
+  name: nowplaying #added in the end of the csv names
+  folder: data/nowplaying/window/
+  prefix: nowplaying
+  slices: 1
+  opts: {sessions_test: 100}
+#params:
+#  num_sessions: 1000
+#  num_predicts: 20
 output:
-  folder: results/ir/next/30music/ver
+  folder: results/ir/next/nowplaying/opt/out/
 results:
-  folder: results/ir/next/30music/ver
+  folder: results/ir/next/nowplaying/opt/results/
 
 metrics:
 - class: accuracy.HitRate
   length: [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]
 - class: accuracy.MRR
   length: [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]
-- class: coverage.Coverage
-  length: [20]
-- class: popularity.Popularity
-  length: [20]
-- class: time_memory_usage.Time_usage_training
-- class: time_memory_usage.Time_usage_testing
-- class: time_memory_usage.Memory_usage
 
 optimize:
   class: accuracy.MRR
   length: [20]
-  iterations: 15 #optional
+  iterations: 30 #optional
 
 algorithms:
-- class: knn.vsknn.VMContextKNN
+#- class: knn.vsknn.VMContextKNN
+#  params_opt:
+#    k: [50, 100, 500, 1000, 1500]
+#    sample_size: [500, 1000, 2500, 5000, 10000]
+#    weighting: ['same', 'div', 'linear', 'quadratic', 'log']
+#    weighting_score: ['same', 'div', 'linear', 'quadratic', 'log']
+#  key: vsknn
+- class: IR.ir_model.IRModel
   params_opt:
-    k: [50, 100, 500, 1000, 1500]
-    sample_size: [500, 1000, 2500, 5000, 10000]
-    weighting: ['same', 'div', 'linear', 'quadratic', 'log']
-    weighting_score: ['same', 'div', 'linear', 'quadratic', 'log']
-  key: vsknn
+    k: [1, 5, 10, 50, 100, 500]
+    tf_type: [binary, raw, log_norm]
+    idf_type: [binary, default]
+    item_ranking_method: [sequential_alignment]
+    aggregate_method: [borda]
+  key: ir_tfidf
+
 ##- class: knn.sknn.ContextKNN
 ##  params:
 ##    k: 100

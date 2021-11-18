@@ -149,7 +149,7 @@ class IRModel:
     def top_k(self, cand_bows, scores, k=None):
         return sorted(zip(cand_bows, scores), reverse=True, key=lambda x: x[1])[:k]
 
-    def aggregate_rank(self, dicts, rank_method=None, cut=20):
+    def aggregate_rank(self, dicts, rank_method=None, cut=10):
         if rank_method is None:
             rank_method = ra.RankAggregator().borda
         rank_keys = lambda d: [x for x, _ in sorted(d.vec.items(), key=lambda x: x[1], reverse=True)][:cut]
