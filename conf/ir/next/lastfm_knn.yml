@@ -12,9 +12,9 @@ params:
   num_sessions: 20000
   num_predicts: 20
 output:
-  folder: results/ir/next/lastfm/
+  folder: results/ir/next/lastfm/final/
 results:
-  folder: results/ir/next/lastfm/
+  folder: results/ir/next/lastfm/final/
 
 metrics:
 - class: accuracy.HitRate
@@ -31,17 +31,18 @@ metrics:
 
 algorithms:
 - class: IR.ir_model.IRModel
-  params: { k: 50, tf_type: 'raw', idf_type: 'default', item_ranking_method: 'sequential_alignment', aggregate_method: 'borda'}
+  params: { k: 5, tf_type: 'log_norm', idf_type: 'default', item_ranking_method: 'sequential_alignment', aggregate_method: 'borda'}
   key: ir_tf_idf
 - class: IR.ir_model.IRModel
   params: { k: 1, tf_type: 'binary', idf_type: 'binary', item_ranking_method: 'sequential_alignment', aggregate_method: 'borda'}
-  key: ir_tf_idf
+  key: ir_1knn
 - class: knn.vsknn.VMContextKNN
   params:
-    k: 500
-    sample_size: 10000
+    k: 50
+    sample_size: 500
     weighting: quadratic
     weighting_score: quadratic
+    idf_weighting: 5
   key: vsknn
 - class: knn.sknn.ContextKNN
   params:

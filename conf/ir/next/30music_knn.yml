@@ -1,5 +1,5 @@
 #type: window # single|window, maybe add opt
-type: opt
+type: window
 key: next_knn #added to the csv names
 evaluation: evaluation
 data:
@@ -12,9 +12,9 @@ params:
   num_sessions: 20000
   num_predicts: 20
 output:
-  folder: results/ir/next/30music/ver
+  folder: results/ir/next/30music/final/
 results:
-  folder: results/ir/next/30music/ver
+  folder: results/ir/next/30music/final/
 
 metrics:
 - class: accuracy.HitRate
@@ -36,21 +36,21 @@ optimize:
 
 algorithms:
 - class: knn.vsknn.VMContextKNN
-  params_opt:
-    k: [50, 100, 500, 1000, 1500]
-    sample_size: [500, 1000, 2500, 5000, 10000]
-    weighting: ['same', 'div', 'linear', 'quadratic', 'log']
-    weighting_score: ['same', 'div', 'linear', 'quadratic', 'log']
+  params:
+    k: 100
+    sample_size: 2500
+    weighting: quadratic
+    weighting_score: quadratic
   key: vsknn
-##- class: knn.sknn.ContextKNN
-##  params:
-##    k: 100
-##    sample_size: 500
-##    similarity: cosine
-##  key: sknn
-##- class: IR.ir_model.IRModel
-##  params: { k: 50, tf_type: 'raw', idf_type: 'default', item_ranking_method: 'sequential_alignment', aggregate_method: 'borda'}
-##  key: ir_tf_idf
-##- class: IR.ir_model.IRModel
-##  params: { k: 1, tf_type: 'binary', idf_type: 'binary', item_ranking_method: 'sequential_alignment', aggregate_method: 'borda'}
-##  key: ir_tf_idf
+- class: knn.sknn.ContextKNN
+  params:
+    k: 100
+    sample_size: 500
+    similarity: cosine
+  key: sknn
+- class: IR.ir_model.IRModel
+  params: { k: 5, tf_type: 'log_norm', idf_type: 'binary', item_ranking_method: 'sequential_alignment', aggregate_method: 'borda'}
+  key: ir_tf_idf
+- class: IR.ir_model.IRModel
+  params: { k: 1, tf_type: 'binary', idf_type: 'binary', item_ranking_method: 'sequential_alignment', aggregate_method: 'borda'}
+  key: ir_1nn

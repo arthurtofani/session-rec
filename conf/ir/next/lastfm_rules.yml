@@ -12,9 +12,9 @@ params:
   num_sessions: 20000
   num_predicts: 20
 output:
-  folder: results/ir/next/lastfm/
+  folder: results/ir/next/lastfm/final/
 results:
-  folder: results/ir/next/lastfm/
+  folder: results/ir/next/lastfm/final/
 
 metrics:
 - class: accuracy.HitRate
@@ -58,5 +58,5 @@ algorithms:
   params: {}
   key: ar
 - class: baselines.sr.SequentialRules
-  params: { steps: 30, weighting: quadratic }
+  params: { steps: 8, weighting: quadratic }
   key: sr

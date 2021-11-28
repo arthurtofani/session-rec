@@ -11,9 +11,9 @@ params:
   num_sessions: 20000
   num_predicts: 20
 output:
-  folder: results/ir/next/30music/
+  folder: results/ir/next/30music/final/
 results:
-  folder: results/ir/next/30music/
+  folder: results/ir/next/30music/final/
 
 metrics:
 - class: accuracy.HitRate

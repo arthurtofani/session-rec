@@ -11,9 +11,9 @@ params:
   num_sessions: 20000
   num_predicts: 20
 output:
-  folder: results/ir/next/nowplaying/
+  folder: results/ir/next/nowplaying/final/
 results:
-  folder: results/ir/next/nowplaying/
+  folder: results/ir/next/nowplaying/final/
 
 metrics:
 - class: accuracy.HitRate
@@ -33,7 +33,7 @@ algorithms:
 #  params: { epochs: 20, lr: 0.007 }
 #  key: narm
 - class: gru4rec.gru4rec.GRU4Rec
-  params: { loss: 'top1-max', final_act: 'linear', dropout_p_hidden: 0.1, learning_rate: 0.08, momentum: 0.1, n_epochs: 15 }
+  params: { loss: 'bpr-max', final_act: 'elu-0.5', dropout_p_hidden: 0, learning_rate: 0.04, momentum: 0.1, n_epochs: 50  }
   key: gru4rec-best
 #- class: gru4rec.gru4rec.GRU4Rec
 #  params: { loss: 'bpr-max', final_act: 'elu-0.5', dropout_p_hidden: 0.6, learning_rate: 0.08, momentum: 0.0, constrained_embedding: True }

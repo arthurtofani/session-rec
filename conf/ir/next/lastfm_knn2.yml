@@ -12,9 +12,9 @@ params:
   num_sessions: 20000
   num_predicts: 20
 output:
-  folder: results/ir/next/lastfm/
+  folder: results/ir/next/lastfm/final/
 results:
-  folder: results/ir/next/lastfm/
+  folder: results/ir/next/lastfm/final/
 
 metrics:
 - class: accuracy.HitRate
@@ -32,19 +32,18 @@ metrics:
 algorithms:
 - class: knn.stan.STAN
   params:
-    k: 1000
+    k: 100
     sample_size: 10000
-    #stan
     lambda_spw: 0.00001
-    lambda_snh: 100
-    lambda_inh: 4.2
+    lambda_snh: 80
+    lambda_inh: 0.4525
   key: stan-mrr
-- class: knn.stan.STAN
-  params:
-    k: 500
-    sample_size: 10000
-    #stan
-    lambda_spw: 2.1
-    lambda_snh: 100
-    lambda_inh: 16.8
-  key: stan-hr
+#- class: knn.stan.STAN
+#  params:
+#    k: 500
+#    sample_size: 10000
+#    #stan
+#    lambda_spw: 2.1
+#    lambda_snh: 100
+#    lambda_inh: 16.8
+#  key: stan-hr

@@ -11,9 +11,9 @@ params:
   num_sessions: 20000
   num_predicts: 20
 output:
-  folder: results/ir/next/nowplaying/
+  folder: results/ir/next/nowplaying/final/
 results:
-  folder: results/ir/next/nowplaying/
+  folder: results/ir/next/nowplaying/final/
 
 metrics:
 - class: accuracy.HitRate
@@ -31,19 +31,18 @@ metrics:
 algorithms:
 - class: knn.stan.STAN
   params:
-    k: 1000
-    sample_size: 10000
-    #stan
+    k: 2000
+    sample_size: 2500
     lambda_spw: 0.00001
     lambda_snh: 100
-    lambda_inh: 4.2
+    lambda_inh: 20.4
   key: stan-mrr
-- class: knn.stan.STAN
-  params:
-    k: 500
-    sample_size: 10000
-    #stan
-    lambda_spw: 2.1
-    lambda_snh: 100
-    lambda_inh: 16.8
-  key: stan-hr
+#- class: knn.stan.STAN
+#  params:
+#    k: 500
+#    sample_size: 10000
+#    #stan
+#    lambda_spw: 2.1
+#    lambda_snh: 100
+#    lambda_inh: 16.8
+#  key: stan-hr
